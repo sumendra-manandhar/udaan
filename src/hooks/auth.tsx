@@ -34,7 +34,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const userId = session?.user.id ?? null;
-  const profile = useLiveQuery(async () => (userId ? (await db.profiles.get(userId)) ?? null : null), [userId]);
+  // Tag each result with the user it was read for. Right after the session
+  // loads, the hook can still hold the result for "no user"; treating that as
+  // "this user has no profile" sent pilots to onboarding by mistake.
+  const lookup = useLiveQuery(
+    async () => ({ for: userId, row: userId ? ((await db.profiles.get(userId)) ?? null) : null }),
+    [userId],
+  );
+  const profile = !ready || !lookup || lookup.for !== userId ? undefined : lookup.row;
 
   async function signOut() {
     await supabase.auth.signOut();

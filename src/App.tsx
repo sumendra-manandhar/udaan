@@ -3,7 +3,9 @@ import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { useAuth } from './hooks/auth';
 import { useOnline } from './hooks/useApp';
-import { supabaseConfigured } from './lib/supabase';
+import { db } from './db/db';
+import type { Profile } from './db/types';
+import { supabase, supabaseConfigured } from './lib/supabase';
 import { MapHome } from './pages/MapHome';
 import { Welcome } from './pages/Welcome';
 
@@ -29,12 +31,28 @@ const SpotForm = lazy(() => import('./pages/SpotForm').then((m) => ({ default: m
 
 /** Signed-in pilots without a profile finish onboarding first. */
 function ProfileGate({ children }: { children: ReactNode }) {
-  const { session, profile } = useAuth();
+  const { session, userId, profile } = useAuth();
   const { pathname } = useLocation();
   const navigate = useNavigate();
   useEffect(() => {
-    if (session && profile === null && navigator.onLine && pathname !== '/onboarding') navigate('/onboarding');
-  }, [session, profile, pathname, navigate]);
+    if (!session || !userId || profile !== null || !navigator.onLine || pathname === '/onboarding') return;
+    let cancelled = false;
+    // On a new phone the profile may exist on the server but not have synced
+    // yet: fetch it before deciding the pilot still needs onboarding.
+    void supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .maybeSingle()
+      .then(async ({ data, error }) => {
+        if (cancelled || error) return;
+        if (data) await db.profiles.put(data as Profile);
+        else navigate('/onboarding');
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [session, userId, profile, pathname, navigate]);
   return <>{children}</>;
 }
 
