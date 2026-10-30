@@ -59,6 +59,10 @@ npm run dev
    update public.profiles set role = 'moderator' where username = 'your_username';
    ```
 
+### Demo data
+
+`supabase/demo_seed.sql` adds 6 sample pilots (bios start with "Demo pilot"), 12 spots, 6 events, RSVPs and 8 flight logs. Run `supabase/demo_cleanup.sql` in the SQL editor to remove all of it before launch.
+
 ### Before launch: airports
 
 `supabase/seed.sql` contains **only Tribhuvan International Airport**, and it is marked unverified. Add every aerodrome from AIP Nepal (published by CAAN) to `public.airports`, confirm each radius, and set `verified = true` only after checking against the official source. The app tells pilots how many airports it knows and that the list may be incomplete. Also review `src/lib/permits.ts` against current CAAN and Home Ministry rules and update `REVIEWED_ON`.
