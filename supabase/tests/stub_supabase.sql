@@ -1,6 +1,5 @@
 -- Minimal stand-ins for Supabase's auth and storage schemas, so migrations
 -- can be tested on plain PostGIS (CI and local). Not used in production.
-create extension if not exists postgis;
 do $$ begin
   if not exists (select 1 from pg_roles where rolname = 'anon') then create role anon nologin; end if;
   if not exists (select 1 from pg_roles where rolname = 'authenticated') then create role authenticated nologin; end if;

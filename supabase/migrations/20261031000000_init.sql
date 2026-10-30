@@ -3,13 +3,14 @@
 -- set by trigger, used as the pull cursor) and deleted_at (soft delete, so
 -- deletions sync to other devices).
 
-create extension if not exists postgis;
+create schema if not exists extensions;
+create extension if not exists postgis with schema extensions;
 
 -- ---------------------------------------------------------------------------
 -- Helpers
 -- ---------------------------------------------------------------------------
 create or replace function public.touch_updated_at()
-returns trigger language plpgsql as $$
+returns trigger language plpgsql set search_path = public as $$
 begin
   new.updated_at := now();
   return new;
@@ -40,7 +41,7 @@ create table public.profiles (
 -- carry auth.uid(); the SQL editor and service role do not, so admins can still
 -- set roles there.
 create or replace function public.protect_profile_role()
-returns trigger language plpgsql as $$
+returns trigger language plpgsql set search_path = public as $$
 begin
   if auth.uid() is null then
     return new;
@@ -90,7 +91,7 @@ create table public.spots (
   type text not null check (type in ('ridge', 'lake', 'field', 'track', 'indoor', 'other')),
   lat double precision not null check (lat between 26 and 31),
   lng double precision not null check (lng between 80 and 89),
-  geom geography(point, 4326) generated always as (st_setsrid(st_makepoint(lng, lat), 4326)::geography) stored,
+  geom extensions.geography(point, 4326) generated always as (extensions.st_setsrid(extensions.st_makepoint(lng, lat), 4326)::extensions.geography) stored,
   best_time text,
   notes text check (char_length(notes) <= 2000),
   is_private boolean not null default false,
@@ -107,7 +108,7 @@ create index spots_updated_idx on public.spots (updated_at);
 -- Server-side safety net: never let a spot inside an airport ring go public,
 -- and only moderators can change status.
 create or replace function public.check_spot()
-returns trigger language plpgsql security definer set search_path = public as $$
+returns trigger language plpgsql security definer set search_path = public, extensions as $$
 begin
   -- Generated columns (geom) are not computed yet in a BEFORE trigger, so the
   -- point is built from lat/lng here.
@@ -290,6 +291,9 @@ on conflict (id) do nothing;
 
 create policy media_read on storage.objects for select using (bucket_id = 'media');
 create policy media_write on storage.objects for insert to authenticated
+  with check (bucket_id = 'media' and (storage.foldername(name))[1] = auth.uid()::text);
+create policy media_update on storage.objects for update to authenticated
+  using (bucket_id = 'media' and (storage.foldername(name))[1] = auth.uid()::text)
   with check (bucket_id = 'media' and (storage.foldername(name))[1] = auth.uid()::text);
 create policy media_delete on storage.objects for delete to authenticated
   using (bucket_id = 'media' and (storage.foldername(name))[1] = auth.uid()::text);
