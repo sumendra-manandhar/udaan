@@ -9,6 +9,8 @@ const CACHE = 'map-tiles';
 
 export const MAP_STYLE_URL =
   (import.meta.env.VITE_MAP_STYLE_URL as string | undefined) ?? 'https://tiles.openfreemap.org/styles/dark';
+export const MAP_STYLE_URL_LIGHT =
+  (import.meta.env.VITE_MAP_STYLE_URL_LIGHT as string | undefined) ?? 'https://tiles.openfreemap.org/styles/positron';
 
 export interface SavedArea {
   id: string;

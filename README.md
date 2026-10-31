@@ -12,10 +12,12 @@ It works in the hills with no signal. Everything is saved on the phone first and
 | Rules check | Every spot and new pin is checked against known airport 5 km rings, on the device | Yes |
 | Moderation | New and moved spots stay private until a moderator approves; spots inside a ring can never go public (enforced in the database) | Review needs a connection |
 | Events | Race nights, group flights, workshops; RSVP with capacity | Browse, RSVP, host |
-| Flight logs | Upload GPX or Blackbox Explorer CSV; parsed on the phone; replay with telemetry; GPX export | Yes |
+| Flight logs | Photos and clips, a GPX / Blackbox Explorer CSV log, or both; logs parsed on the phone; replay with telemetry; GPX export | Yes |
+| Check-ins | "I'm here" at a spot, confirmed by the phone's GPS (location not stored); shows who's flying there now | Yes |
 | Pilot profiles | Builds, spots, reels, flights, "available for hire" with services | Yes |
 | Hire requests | Send and answer shoot requests | Yes |
 | Permit checklist | Step-by-step guidance with local progress | Yes |
+| Light and dark mode | System, Light or Dark in Settings; the map switches style too | Yes |
 | Offline maps | Browsed tiles are cached; save an area (up to 3,000 tiles) before a trip | Yes |
 
 ## Stack

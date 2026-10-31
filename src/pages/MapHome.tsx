@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useCallback, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Icon } from '../components/Icon';
+import { HERE_NOW_MS } from '../components/CheckIn';
 import { MapView } from '../components/MapView';
 import { Chips, DateChip, Media, TabBar } from '../components/ui';
 import { db } from '../db/db';
@@ -30,6 +31,16 @@ export function MapHome() {
 
   const loadedSpots = useLiveQuery(() => db.spots.toArray(), []);
   const spots = useMemo(() => loadedSpots ?? [], [loadedSpots]);
+  // Pilots checked in at each spot within the last few hours.
+  const hereNow = useLiveQuery(async () => {
+    const since = new Date(Date.now() - HERE_NOW_MS).toISOString();
+    const map = new Map<string, Set<string>>();
+    for (const c of await db.checkins.where('checked_in_at').aboveOrEqual(since).toArray()) {
+      if (!map.has(c.spot_id)) map.set(c.spot_id, new Set());
+      map.get(c.spot_id)!.add(c.user_id);
+    }
+    return map;
+  }, []);
   const nextEvent = useLiveQuery(
     () => db.events.where('starts_at').aboveOrEqual(new Date().toISOString()).first(),
     [],
@@ -68,7 +79,7 @@ export function MapHome() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
-          <Link to="/permits" className="icon-btn glass" aria-label="Permit checklist" style={{ borderRadius: 14, width: 48, height: 48 }}>
+          <Link to="/permits" className="icon-btn" aria-label="Permit checklist" style={{ borderRadius: 14, width: 48, height: 48, background: 'var(--glass)', border: '1px solid var(--line-2)' }}>
             <Icon name="shield" />
           </Link>
         </div>
@@ -109,9 +120,14 @@ export function MapHome() {
           const ring = checkAirportRings(spot.lat, spot.lng, airports);
           return (
             <Link key={spot.id} to={`/spots/${spot.id}`} className={`list-card${spot.id === selected ? ' card accent' : ''}`}>
-              <Media media={spot.media[0]} className="thumb" />
+              <Media media={spot.media[0]} className="thumb" thumb />
               <span className="stack grow" style={{ gap: 2 }}>
-                <span style={{ fontWeight: 600 }}>{spot.name}</span>
+                <span className="row between" style={{ gap: 6 }}>
+                  <span style={{ fontWeight: 600 }}>{spot.name}</span>
+                  {(hereNow?.get(spot.id)?.size ?? 0) > 0 && (
+                    <span className="tag good" style={{ padding: '1px 8px', fontSize: 11.5 }}>{hereNow!.get(spot.id)!.size} here now</span>
+                  )}
+                </span>
                 <span className="small muted">
                   {SPOT_TYPES.find((t) => t.value === spot.type)?.label} · {formatDistance(d)}
                   {spot.status !== 'approved' && ' · in review'}

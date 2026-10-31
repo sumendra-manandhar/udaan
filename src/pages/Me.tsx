@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { Link } from 'react-router-dom';
 import { Icon } from '../components/Icon';
+import { SignOutButton } from '../components/SignOutButton';
 import { SignInPrompt, TabBar } from '../components/ui';
 import { db } from '../db/db';
 import { useAuth } from '../hooks/auth';
@@ -8,7 +9,7 @@ import { useSyncState } from '../hooks/useApp';
 import { ProfileView } from './PilotProfile';
 
 export function Me() {
-  const { userId, profile } = useAuth();
+  const { userId, profile, session } = useAuth();
   const sync = useSyncState();
   const inbox = useLiveQuery(
     () => (userId ? db.hire_requests.where('pilot_id').equals(userId).filter((r) => r.status === 'sent').count() : 0),
@@ -19,6 +20,7 @@ export function Me() {
     <main className="screen">
       <div className="topbar">
         <h1 className="grow">{profile ? '' : 'Profile'}</h1>
+        <SignOutButton className="btn small" />
         <Link to="/settings" className="icon-btn" aria-label="Settings and sync">
           <Icon name={sync.status === 'offline' ? 'cloudOff' : 'settings'} />
         </Link>
@@ -41,6 +43,12 @@ export function Me() {
           )}
           <ProfileView profile={profile} own />
         </>
+      )}
+      {session && (
+        <section className="stack" style={{ marginTop: 8 }}>
+          <p className="small muted center">Signed in as {session.user.email}</p>
+          <SignOutButton />
+        </section>
       )}
       <TabBar />
     </main>

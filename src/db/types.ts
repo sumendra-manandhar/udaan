@@ -95,10 +95,21 @@ export interface Flight extends Synced {
   duration_s?: number | null;
   max_alt_m?: number | null;
   distance_m?: number | null;
-  source: 'gpx' | 'csv';
+  /** 'media' = no log file, just photos or clips. */
+  source: 'gpx' | 'csv' | 'media';
   track: TrackPoint[];
   series: FlightSeries;
+  media?: MediaRef[];
+  notes?: string | null;
   is_public: boolean;
+}
+
+export interface Checkin extends Synced {
+  spot_id: string;
+  user_id: string;
+  /** When it happened on the phone (kept even if it synced later). */
+  checked_in_at: string;
+  note?: string | null;
 }
 
 export interface HireRequest extends Synced {
@@ -121,6 +132,7 @@ export interface TableRows {
   rsvps: Rsvp;
   flights: Flight;
   hire_requests: HireRequest;
+  checkins: Checkin;
 }
 
 export type TableName = keyof TableRows;
@@ -134,6 +146,7 @@ export const PULL_TABLES: TableName[] = [
   'rsvps',
   'flights',
   'hire_requests',
+  'checkins',
 ];
 
 /** Tables the client writes to. */
@@ -146,8 +159,9 @@ export const CLIENT_COLUMNS: Record<WritableTable, string[]> = {
   spots: ['id', 'created_by', 'name', 'type', 'lat', 'lng', 'best_time', 'notes', 'is_private', 'media'],
   events: ['id', 'host_id', 'title', 'kind', 'starts_at', 'ends_at', 'venue_name', 'spot_id', 'lat', 'lng', 'description', 'bring', 'capacity', 'fee', 'approval_note'],
   rsvps: ['id', 'event_id', 'user_id', 'status'],
-  flights: ['id', 'pilot_id', 'spot_id', 'title', 'flown_at', 'duration_s', 'max_alt_m', 'distance_m', 'source', 'track', 'series', 'is_public'],
+  flights: ['id', 'pilot_id', 'spot_id', 'title', 'flown_at', 'duration_s', 'max_alt_m', 'distance_m', 'source', 'track', 'series', 'media', 'notes', 'is_public'],
   hire_requests: ['id', 'pilot_id', 'requester_id', 'shoot_type', 'location', 'shoot_date', 'budget', 'contact', 'message', 'status'],
+  checkins: ['id', 'spot_id', 'user_id', 'checked_in_at', 'note'],
 };
 
 /** Upsert conflict target per table (rsvps are unique per event and user). */

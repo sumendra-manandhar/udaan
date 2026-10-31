@@ -51,6 +51,25 @@ const paths = {
   send: <path d="M2.5 10.5 L19.5 3 L14 19.5 L10.5 12 Z M10.5 12 L19.5 3" />,
   download: <path d="M11 3v11M6.5 9.5 11 14l4.5-4.5M4 17.5v2h14v-2" />,
   trash: <path d="M4 6h14M8.5 6V3.5h5V6M6 6l1 13h8l1-13" />,
+  camera: (
+    <>
+      <path d="M3 7.5h3.5L8 5h6l1.5 2.5H19v11H3z" />
+      <circle cx="11" cy="12.5" r="3.2" />
+    </>
+  ),
+  checkin: (
+    <>
+      <path d="M11 20s7-6.2 7-11.5a7 7 0 0 0-14 0C4 13.8 11 20 11 20z" />
+      <path d="M8 8.8l2.2 2.2L14.2 7" />
+    </>
+  ),
+  sun: (
+    <>
+      <circle cx="11" cy="11" r="4" />
+      <path d="M11 1.5v2.5M11 18v2.5M1.5 11H4M18 11h2.5M4.3 4.3l1.8 1.8M15.9 15.9l1.8 1.8M4.3 17.7l1.8-1.8M15.9 6.1l1.8-1.8" />
+    </>
+  ),
+  moon: <path d="M18.5 13.5A7.5 7.5 0 0 1 8.5 3.5a7.5 7.5 0 1 0 10 10z" />,
 } as const;
 
 export type IconName = keyof typeof paths;

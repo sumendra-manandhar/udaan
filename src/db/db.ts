@@ -1,6 +1,7 @@
 import Dexie, { type EntityTable } from 'dexie';
 import type {
   Airport,
+  Checkin,
   Flight,
   HireRequest,
   MediaBlob,
@@ -22,6 +23,7 @@ export class UdaanDB extends Dexie {
   rsvps!: EntityTable<Rsvp, 'id'>;
   flights!: EntityTable<Flight, 'id'>;
   hire_requests!: EntityTable<HireRequest, 'id'>;
+  checkins!: EntityTable<Checkin, 'id'>;
   outbox!: EntityTable<OutboxItem, 'seq'>;
   media!: EntityTable<MediaBlob, 'path'>;
   meta!: EntityTable<MetaRow, 'key'>;
@@ -39,6 +41,10 @@ export class UdaanDB extends Dexie {
       outbox: '++seq, table, row_id, status',
       media: 'path, uploaded',
       meta: 'key',
+    });
+    // v2: check-ins at spots.
+    this.version(2).stores({
+      checkins: 'id, spot_id, user_id, checked_in_at',
     });
   }
 }

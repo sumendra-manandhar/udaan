@@ -7,7 +7,8 @@ import type { Feature, FeatureCollection } from 'geojson';
 import { useEffect, useRef } from 'react';
 import type { Airport, Spot, TrackPoint } from '../db/types';
 import { circlePolygon } from '../lib/geo';
-import { MAP_STYLE_URL } from '../lib/offlineMaps';
+import { MAP_STYLE_URL, MAP_STYLE_URL_LIGHT } from '../lib/offlineMaps';
+import { useTheme } from '../lib/theme';
 
 setWorkerUrl(workerUrl);
 
@@ -28,7 +29,14 @@ export interface MapViewProps {
   locate?: boolean;
 }
 
-export function MapView({
+/** The map follows the light/dark theme; switching themes rebuilds it. */
+export function MapView(props: MapViewProps) {
+  const { theme } = useTheme();
+  return <MapViewInner key={theme} styleUrl={theme === 'light' ? MAP_STYLE_URL_LIGHT : MAP_STYLE_URL} {...props} />;
+}
+
+function MapViewInner({
+  styleUrl,
   className = 'map-fill',
   center,
   zoom = 10,
@@ -41,7 +49,7 @@ export function MapView({
   onMove,
   interactive = true,
   locate,
-}: MapViewProps) {
+}: MapViewProps & { styleUrl: string }) {
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<MlMap | null>(null);
   const loaded = useRef(false);
@@ -56,7 +64,7 @@ export function MapView({
     if (!el.current) return;
     const m = new MlMap({
       container: el.current,
-      style: MAP_STYLE_URL,
+      style: styleUrl,
       center: center ?? KATHMANDU,
       zoom,
       interactive,

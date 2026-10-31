@@ -86,7 +86,9 @@ export function Chips<T extends string>({
   );
 }
 
-export function Media({ media, className, alt = '' }: { media?: MediaRef; className?: string; alt?: string }) {
+/** A photo or clip. `thumb` shows a still preview (no controls); `autoPlay`
+ * plays a clip with sound controls, for full-screen viewing. */
+export function Media({ media, className, alt = '', thumb, autoPlay }: { media?: MediaRef; className?: string; alt?: string; thumb?: boolean; autoPlay?: boolean }) {
   const [url, setUrl] = useState<string | null>(null);
   useEffect(() => {
     let live = true;
@@ -97,7 +99,8 @@ export function Media({ media, className, alt = '' }: { media?: MediaRef; classN
   }, [media]);
   if (!media || !url) return <div className={className} />;
   if (media.kind === 'video') {
-    return <video className={className} src={url} muted playsInline loop controls preload="metadata" />;
+    if (thumb) return <video className={className} src={`${url}#t=0.5`} muted playsInline preload="metadata" />;
+    return <video className={className} src={url} muted={!autoPlay} autoPlay={autoPlay} playsInline loop controls preload="metadata" />;
   }
   return <img className={className} src={url} alt={alt} loading="lazy" />;
 }

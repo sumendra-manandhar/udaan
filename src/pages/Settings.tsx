@@ -1,13 +1,15 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Icon } from '../components/Icon';
 import { MapView } from '../components/MapView';
+import { SignOutButton } from '../components/SignOutButton';
 import { Empty, TopBar } from '../components/ui';
 import { db } from '../db/db';
 import { useAuth } from '../hooks/auth';
 import { useOnline, useSyncState } from '../hooks/useApp';
 import { MAX_TILES, bestMaxZoom, countTiles, listAreas, removeArea, saveArea, type SavedArea } from '../lib/offlineMaps';
+import { useTheme } from '../lib/theme';
 import { syncNow } from '../sync/manager';
 
 interface InstallEvent extends Event {
@@ -26,8 +28,8 @@ function bytes(n?: number) {
 }
 
 export function Settings() {
-  const navigate = useNavigate();
-  const { session, profile, signOut } = useAuth();
+  const { session, profile } = useAuth();
+  const { pref: themePref, setPref: setThemePref } = useTheme();
   const online = useOnline();
   const sync = useSyncState();
   const failed = useLiveQuery(() => db.outbox.where('status').equals('failed').toArray(), []) ?? [];
@@ -70,6 +72,22 @@ export function Settings() {
       <TopBar title="Settings and sync" back="/me" />
 
       <section className="card stack">
+        <b>Appearance</b>
+        <div className="segmented" role="radiogroup" aria-label="Theme" style={{ gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' }}>
+          {(['system', 'light', 'dark'] as const).map((p) => (
+            <button key={p} type="button" role="radio" aria-checked={themePref === p} aria-selected={themePref === p} onClick={() => setThemePref(p)}>
+              <span className="row" style={{ justifyContent: 'center', gap: 6 }}>
+                {p === 'light' && <Icon name="sun" size={16} />}
+                {p === 'dark' && <Icon name="moon" size={16} />}
+                {p === 'system' ? 'System' : p === 'light' ? 'Light' : 'Dark'}
+              </span>
+            </button>
+          ))}
+        </div>
+        {themePref === 'system' && <p className="tiny faint">Follows your phone's light or dark setting.</p>}
+      </section>
+
+      <section className="card stack">
         <div className="row between">
           <b>Sync</b>
           <span className={`status-line ${online ? 'good' : 'warn'}`}><span className="dot" />{online ? 'Online' : 'Offline'}</span>
@@ -85,7 +103,7 @@ export function Settings() {
       </section>
 
       {failed.length > 0 && (
-        <section className="card stack" style={{ borderColor: 'rgba(255,107,94,0.45)' }}>
+        <section className="card stack" style={{ borderColor: 'var(--bad-line)' }}>
           <b>Changes the server refused</b>
           {failed.map((f) => (
             <div key={f.seq} className="stack" style={{ gap: 4 }}>
@@ -145,13 +163,7 @@ export function Settings() {
         {session ? (
           <>
             <p className="small muted">Signed in as {session.user.email}{profile && ` (@${profile.username})`}</p>
-            <button type="button" className="btn danger" onClick={async () => {
-              if (sync.pending && !confirm(`${sync.pending} changes have not uploaded yet and will be lost. Sign out anyway?`)) return;
-              await signOut();
-              navigate('/', { replace: true });
-            }}>
-              Sign out
-            </button>
+            <SignOutButton />
           </>
         ) : (
           <Link className="btn primary" to="/signin?mode=signin">Sign in</Link>

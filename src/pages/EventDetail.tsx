@@ -33,7 +33,7 @@ export function EventDetail() {
 
   return (
     <main className="screen no-tabs">
-      <div className="cover" style={{ height: 180, background: 'linear-gradient(135deg, #3a2a40 0%, #1e1a2a 100%)' }}>
+      <div className="cover cover-event" style={{ height: 180 }}>
         <div style={{ position: 'absolute', left: 16, top: 'calc(16px + env(safe-area-inset-top, 0px))' }}><BackButton glass to="/events" /></div>
         <span className="tag solid" style={{ position: 'absolute', left: 16, bottom: 14 }}>
           {EVENT_KINDS.find((k) => k.value === event.kind)?.label.toUpperCase()}

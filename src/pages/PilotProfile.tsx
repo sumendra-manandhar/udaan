@@ -11,13 +11,18 @@ export function ProfileView({ profile, own }: { profile: Profile; own: boolean }
   const [tab, setTab] = useState<'reels' | 'builds' | 'spots' | 'logs'>('reels');
   const spots = useLiveQuery(() => db.spots.where('created_by').equals(profile.id).toArray(), [profile.id]) ?? [];
   const flights = useLiveQuery(() => db.flights.where('pilot_id').equals(profile.id).reverse().sortBy('flown_at'), [profile.id]) ?? [];
-  const media = spots.flatMap((s) => s.media.map((m) => ({ m, spot: s })));
+  const checkinCount = useLiveQuery(() => db.checkins.where('user_id').equals(profile.id).count(), [profile.id]) ?? 0;
+  // Reels: clips and photos from flights (newest first), then from spots.
+  const media = [
+    ...flights.filter((f) => f.is_public || own).flatMap((f) => (f.media ?? []).map((m) => ({ m, to: `/logs/${f.id}`, label: f.title }))),
+    ...spots.flatMap((s) => s.media.map((m) => ({ m, to: `/spots/${s.id}`, label: s.name }))),
+  ];
   const shareUrl = `${location.origin}/pilots/${profile.username}`;
 
   return (
     <>
-      <div className="cover" style={{ height: 180, background: 'linear-gradient(180deg, #2a3a44 0%, #1b2a30 55%, #14201e 100%)' }}>
-        {media[0] && <Media media={media[0].m} />}
+      <div className="cover cover-profile" style={{ height: 180 }}>
+        {media[0] && <Media media={media[0].m} thumb />}
         <div style={{ position: 'absolute', left: 16, top: 'calc(16px + env(safe-area-inset-top, 0px))' }}><BackButton glass /></div>
         <button
           type="button"
@@ -51,7 +56,7 @@ export function ProfileView({ profile, own }: { profile: Profile; own: boolean }
       <div className="grid-3">
         <div className="stat"><b>{flights.length}</b><span>Flights</span></div>
         <div className="stat"><b>{spots.filter((s) => s.status === 'approved').length}</b><span>Spots added</span></div>
-        <div className="stat"><b>{formatDuration(flights.reduce((a, f) => a + (f.duration_s ?? 0), 0))}</b><span>Air time</span></div>
+        <div className="stat"><b>{checkinCount}</b><span>Check-ins</span></div>
       </div>
 
       <div className="segmented" role="tablist" aria-label="Profile sections" style={{ gridTemplateColumns: 'repeat(4, minmax(0, 1fr))' }}>
@@ -62,9 +67,10 @@ export function ProfileView({ profile, own }: { profile: Profile; own: boolean }
 
       {tab === 'reels' && (media.length ? (
         <div className="grid-3">
-          {media.map(({ m, spot }) => (
-            <Link key={m.path} to={`/spots/${spot.id}`} aria-label={spot.name} style={{ aspectRatio: '9 / 14', borderRadius: 10, overflow: 'hidden', background: 'var(--surface-3)' }}>
-              <Media media={m} className="" />
+          {media.map(({ m, to, label }) => (
+            <Link key={m.path} to={to} aria-label={label} style={{ aspectRatio: '9 / 14', borderRadius: 10, overflow: 'hidden', background: 'var(--surface-3)', position: 'relative' }}>
+              <Media media={m} thumb className="thumb-fill" />
+              {m.kind === 'video' && <span className="media-badge" aria-hidden="true">▶</span>}
             </Link>
           ))}
         </div>
@@ -86,7 +92,7 @@ export function ProfileView({ profile, own }: { profile: Profile; own: boolean }
 
       {tab === 'logs' && (flights.length ? flights.map((f) => (
         <Link key={f.id} to={`/logs/${f.id}`} className="list-card between">
-          <span className="stack" style={{ gap: 0 }}><b>{f.title}</b><span className="small muted">{formatDuration(f.duration_s)}</span></span>
+          <span className="stack" style={{ gap: 0 }}><b>{f.title}</b><span className="small muted">{f.flown_at ? new Date(f.flown_at).toLocaleDateString() : ''}{f.duration_s ? ` · ${formatDuration(f.duration_s)}` : ''}{f.media?.length ? ` · ${f.media.length} media` : ''}</span></span>
           <span className="link small">Replay →</span>
         </Link>
       )) : <Empty>No public flights yet.</Empty>)}

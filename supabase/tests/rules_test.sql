@@ -67,4 +67,23 @@ do $$ begin
   end;
 end $$;
 reset role;
+
+-- Check-ins: pilots check themselves in, never someone else.
+set role authenticated;
+select set_config('request.jwt.claim.sub', '22222222-2222-2222-2222-222222222222', false);
+insert into checkins (id, spot_id, user_id, checked_in_at)
+values ('cccccccc-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', auth.uid(), now() + interval '2 days');
+do $$ begin
+  assert (select checked_in_at <= now() + interval '1 minute' from checkins where id = 'cccccccc-0000-0000-0000-000000000001'), 'future check-in times are clamped';
+  begin
+    insert into checkins (id, spot_id, user_id)
+    values ('cccccccc-0000-0000-0000-000000000002', 'aaaaaaaa-0000-0000-0000-000000000001', '11111111-1111-1111-1111-111111111111');
+    raise exception 'checking in someone else must fail';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+-- Media-only flights are allowed.
+insert into flights (id, pilot_id, title, source, media)
+values ('dddddddd-0000-0000-0000-000000000001', auth.uid(), 'Clip only', 'media', '[{"path":"x/y.mp4","kind":"video"}]');
+reset role;
 select 'all rules tests passed' as result;

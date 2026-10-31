@@ -100,10 +100,10 @@ export function startSync(): void {
 
 /** Remove everything personal from this device (used on sign-out). */
 export async function clearLocalData(): Promise<void> {
-  await db.transaction('rw', [db.spots, db.events, db.rsvps, db.flights, db.hire_requests, db.outbox, db.media, db.meta, db.profiles], async () => {
+  await db.transaction('rw', [db.spots, db.events, db.rsvps, db.flights, db.hire_requests, db.checkins, db.outbox, db.media, db.meta, db.profiles], async () => {
     await Promise.all([
       db.spots.clear(), db.events.clear(), db.rsvps.clear(), db.flights.clear(),
-      db.hire_requests.clear(), db.outbox.clear(), db.media.clear(), db.profiles.clear(),
+      db.hire_requests.clear(), db.checkins.clear(), db.outbox.clear(), db.media.clear(), db.profiles.clear(),
     ]);
     const keep = await db.meta.where('key').startsWith('area:').toArray();
     await db.meta.clear();

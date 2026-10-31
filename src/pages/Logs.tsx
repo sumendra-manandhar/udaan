@@ -1,7 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { Link } from 'react-router-dom';
 import { Icon } from '../components/Icon';
-import { Empty, SignInPrompt, TabBar, formatDuration } from '../components/ui';
+import { Empty, Media, SignInPrompt, TabBar, formatDuration } from '../components/ui';
 import { db } from '../db/db';
 import type { TrackPoint } from '../db/types';
 import { useAuth } from '../hooks/auth';
@@ -16,7 +16,7 @@ function MiniTrack({ track }: { track: TrackPoint[] }) {
   const s = Math.min(sx, sy);
   const d = track.map((p, i) => `${i ? 'L' : 'M'}${(4 + (p[0] - minX) * s).toFixed(1)} ${(40 - (p[1] - minY) * s).toFixed(1)}`).join(' ');
   return (
-    <svg width="56" height="44" viewBox="0 0 56 44" aria-hidden="true" style={{ flex: 'none', borderRadius: 8, background: '#13171a' }}>
+    <svg width="56" height="44" viewBox="0 0 56 44" aria-hidden="true" style={{ flex: 'none', borderRadius: 8, background: 'var(--map-bg)' }}>
       <path d={d} fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
@@ -36,11 +36,11 @@ export function Logs() {
         <SignInPrompt what="keep your flight logs" />
       ) : (
         <>
-          <Link to="/logs/upload" className="card row" style={{ borderStyle: 'dashed', borderColor: 'var(--accent)', background: 'rgba(255,138,61,0.06)' }}>
-            <span className="icon-btn" style={{ background: 'var(--accent)', color: '#111', borderRadius: 12 }}><Icon name="upload" /></span>
+          <Link to="/logs/upload" className="card row" style={{ borderStyle: 'dashed', borderColor: 'var(--accent)', background: 'var(--accent-soft)' }}>
+            <span className="icon-btn" style={{ background: 'var(--accent)', color: 'var(--on-accent)', borderRadius: 12 }}><Icon name="upload" /></span>
             <span className="stack" style={{ gap: 0 }}>
-              <b>Upload a flight</b>
-              <span className="small muted">GPX track or Blackbox Explorer CSV</span>
+              <b>Log a flight</b>
+              <span className="small muted">Photos, clips or a GPS log</span>
             </span>
           </Link>
           <div className="grid-3">
@@ -49,14 +49,20 @@ export function Logs() {
             <div className="stat"><b>{places}</b><span>Spots</span></div>
           </div>
           <h2>Recent</h2>
-          {flights.length === 0 && <Empty>No flights yet. Upload a GPX or CSV log to replay it on the map.</Empty>}
+          {flights.length === 0 && <Empty>No flights yet. Log one with your clips and photos, or a GPS log to replay it on the map.</Empty>}
           {flights.map((f) => (
             <Link key={f.id} to={`/logs/${f.id}`} className="list-card">
-              <MiniTrack track={f.track} />
+              {f.track.length < 2 && f.media?.[0] ? (
+                <span className="thumb" style={{ width: 56, height: 44, borderRadius: 8, position: 'relative' }}>
+                  <Media media={f.media[0]} thumb className="thumb-fill" />
+                </span>
+              ) : (
+                <MiniTrack track={f.track} />
+              )}
               <span className="stack grow" style={{ gap: 0 }}>
                 <b>{f.title}</b>
                 <span className="small muted">
-                  {(f.spot_id && spots?.get(f.spot_id)) || 'No spot'} · {f.flown_at ? new Date(f.flown_at).toLocaleDateString() : 'date unknown'} · {formatDuration(f.duration_s)}
+                  {(f.spot_id && spots?.get(f.spot_id)) || 'No spot'} · {f.flown_at ? new Date(f.flown_at).toLocaleDateString() : 'date unknown'}{f.duration_s ? ` · ${formatDuration(f.duration_s)}` : ''}{f.media?.length ? ` · ${f.media.length} ${f.media.length === 1 ? 'clip/photo' : 'clips/photos'}` : ''}
                 </span>
               </span>
               <span className="muted" aria-hidden="true">›</span>

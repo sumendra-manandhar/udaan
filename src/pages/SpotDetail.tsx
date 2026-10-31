@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Icon } from '../components/Icon';
+import { CheckInCard } from '../components/CheckIn';
 import { RingStatus } from '../components/RingStatus';
 import { Avatar, BackButton, Empty, Media, formatDuration } from '../components/ui';
 import { db } from '../db/db';
@@ -53,6 +54,8 @@ export function SpotDetail() {
         <span className="tag">{SPOT_TYPES.find((t) => t.value === spot.type)?.label}</span>
         {spot.best_time && <span className="tag">{spot.best_time}</span>}
       </div>
+
+      <CheckInCard spot={spot} />
 
       <RingStatus lat={spot.lat} lng={spot.lng} airports={airports} />
 

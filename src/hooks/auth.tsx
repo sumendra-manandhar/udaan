@@ -44,9 +44,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const profile = !ready || !lookup || lookup.for !== userId ? undefined : lookup.row;
 
   async function signOut() {
-    await supabase.auth.signOut();
+    // 'local' ends the session on this device without needing the network,
+    // so signing out works offline too.
+    await supabase.auth.signOut({ scope: 'local' }).catch(() => undefined);
+    setSession(null);
     await clearLocalData();
-    await resetAndResync();
+    void resetAndResync();
   }
 
   return (

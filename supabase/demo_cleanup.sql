@@ -1,6 +1,7 @@
 -- Removes all sample content before launch.
 
 -- Sample content added to real accounts (IDs starting 00000000-0000-4000-b).
+delete from public.checkins where id::text like '00000000-0000-4000-b%';
 delete from public.hire_requests where id::text like '00000000-0000-4000-b%';
 delete from public.rsvps where id::text like '00000000-0000-4000-b%';
 delete from public.flights where id::text like '00000000-0000-4000-b%';
