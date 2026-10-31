@@ -43,5 +43,6 @@ jobs:
       - run: psql -v ON_ERROR_STOP=1 -f supabase/tests/stub_supabase.sql
       - run: psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261031000000_init.sql
       - run: psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261031000100_hardening.sql
+      - run: psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261031000200_signup_profiles.sql
       - run: psql -v ON_ERROR_STOP=1 -f supabase/seed.sql
       - run: psql -v ON_ERROR_STOP=1 -f supabase/tests/rules_test.sql

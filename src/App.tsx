@@ -25,6 +25,7 @@ const PilotProfile = lazy(() => import('./pages/PilotProfile').then((m) => ({ de
 const ProfileEdit = lazy(() => import('./pages/ProfileEdit').then((m) => ({ default: m.ProfileEdit })));
 const Requests = lazy(() => import('./pages/Requests').then((m) => ({ default: m.Requests })));
 const Settings = lazy(() => import('./pages/Settings').then((m) => ({ default: m.Settings })));
+const ResetPassword = lazy(() => import('./pages/ResetPassword').then((m) => ({ default: m.ResetPassword })));
 const SignIn = lazy(() => import('./pages/SignIn').then((m) => ({ default: m.SignIn })));
 const SpotDetail = lazy(() => import('./pages/SpotDetail').then((m) => ({ default: m.SpotDetail })));
 const SpotForm = lazy(() => import('./pages/SpotForm').then((m) => ({ default: m.SpotForm })));
@@ -103,6 +104,7 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/welcome" element={<Welcome />} />
           <Route path="/signin" element={<SignIn />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/spots/new" element={<SpotForm />} />
           <Route path="/spots/:id" element={<SpotDetail />} />

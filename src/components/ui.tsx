@@ -152,8 +152,8 @@ export function SignInPrompt({ what }: { what: string }) {
   return (
     <div className="card stack">
       <p>Sign in to {what}. Everything you add is saved on your phone and syncs when you're online.</p>
-      <Link to="/signin" className="btn primary">
-        Sign in or create an account
+      <Link to="/signin?mode=signup" className="btn primary">
+        Create a free account
       </Link>
     </div>
   );

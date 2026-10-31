@@ -154,7 +154,7 @@ export function Settings() {
             </button>
           </>
         ) : (
-          <Link className="btn primary" to="/signin">Sign in</Link>
+          <Link className="btn primary" to="/signin?mode=signin">Sign in</Link>
         )}
         <p className="tiny faint center">Map data © OpenStreetMap contributors, OpenMapTiles, OpenFreeMap.</p>
       </section>

@@ -1,10 +1,21 @@
 -- Asserts the safety rules in the init migration. Any failure raises an error.
 \set ON_ERROR_STOP 1
-insert into auth.users values ('11111111-1111-1111-1111-111111111111'), ('22222222-2222-2222-2222-222222222222');
+-- Sign-up: creating an account creates its profile from the sign-up details.
+insert into auth.users (id, email, raw_user_meta_data) values
+  ('11111111-1111-1111-1111-111111111111', 'a@example.com', '{"username":"Pilot_A","display_name":"Pilot A","role":"moderator"}'),
+  ('22222222-2222-2222-2222-222222222222', 'b@example.com', '{"username":"pilot_b","display_name":"Pilot B"}'),
+  ('33333333-3333-3333-3333-333333333333', 'pilot_a@example.com', '{"username":"pilot_a"}'),
+  ('44444444-4444-4444-4444-444444444444', 'x@example.com', '{}');
+do $$ begin
+  assert (select display_name from profiles where username = 'pilot_a') = 'Pilot A', 'sign-up creates the profile with the chosen name';
+  assert (select role from profiles where username = 'pilot_a') = 'pilot', 'sign-up metadata cannot make someone a moderator';
+  assert (select username from profiles where id = '33333333-3333-3333-3333-333333333333') = 'pilot_a1', 'a taken username gets a number added';
+  assert (select username from profiles where id = '44444444-4444-4444-4444-444444444444') like 'pilot%', 'no username falls back to a generated one';
+end $$;
 
 set role authenticated;
 select set_config('request.jwt.claim.sub', '11111111-1111-1111-1111-111111111111', false);
-insert into profiles (id, username, display_name, role) values (auth.uid(), 'pilot_a', 'Pilot A', 'moderator');
+update profiles set role = 'moderator' where id = auth.uid();
 do $$ begin
   assert (select role from profiles where username = 'pilot_a') = 'pilot', 'users must not self-assign moderator';
 end $$;
@@ -43,7 +54,6 @@ reset role;
 
 set role authenticated;
 select set_config('request.jwt.claim.sub', '22222222-2222-2222-2222-222222222222', false);
-insert into profiles (id, username, display_name) values (auth.uid(), 'pilot_b', 'Pilot B');
 do $$ begin
   begin
     insert into hire_requests (id, pilot_id, requester_id, shoot_type, location, contact, message)

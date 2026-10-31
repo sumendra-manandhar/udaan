@@ -24,7 +24,7 @@ export function Welcome() {
         </button>
       ) : (
         <>
-          <button type="button" className="btn primary block" onClick={() => enter('/signin')}>
+          <button type="button" className="btn primary block" onClick={() => enter('/signin?mode=signup')}>
             Create pilot account
           </button>
           <button type="button" className="btn block" onClick={() => enter('/')}>
@@ -32,7 +32,7 @@ export function Welcome() {
           </button>
           <p className="center small muted">
             Already flying with us?{' '}
-            <Link className="link" to="/signin" onClick={() => localStorage.setItem('udaan:welcomed', '1')}>
+            <Link className="link" to="/signin?mode=signin" onClick={() => localStorage.setItem('udaan:welcomed', '1')}>
               Sign in
             </Link>
           </p>

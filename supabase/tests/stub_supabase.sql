@@ -7,7 +7,17 @@ do $$ begin
 end $$;
 create schema if not exists auth;
 create schema if not exists storage;
-create table if not exists auth.users (id uuid primary key);
+create table if not exists auth.users (
+  id uuid primary key,
+  instance_id uuid,
+  aud text,
+  role text,
+  email text unique,
+  raw_app_meta_data jsonb default '{}'::jsonb,
+  raw_user_meta_data jsonb default '{}'::jsonb,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
 create or replace function auth.uid() returns uuid language sql stable as
   $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
 create table if not exists storage.buckets (id text primary key, name text, public boolean, file_size_limit bigint, allowed_mime_types text[]);

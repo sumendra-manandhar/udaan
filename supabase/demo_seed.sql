@@ -48,7 +48,10 @@ insert into public.profiles (id, username, display_name, bio, home_base, styles,
    'Demo pilot · Helps beginners build and tune their first quad. Runs the build nights.', 'Lalitpur',
    '{beginner,freestyle}', false, '[]',
    '[{"name":"First-build 5\"","specs":"Budget 5\" kit · 2207 motors · F4 FC"}]', true)
-on conflict (id) do nothing;
+on conflict (id) do update set
+  username = excluded.username, display_name = excluded.display_name, bio = excluded.bio,
+  home_base = excluded.home_base, styles = excluded.styles, for_hire = excluded.for_hire,
+  services = excluded.services, builds = excluded.builds, uin_registered = excluded.uin_registered;
 
 -- Spots (inserted normally so the airport-ring trigger runs) ------------------
 insert into public.spots (id, created_by, name, type, lat, lng, best_time, notes, is_private) values

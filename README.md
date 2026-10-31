@@ -52,8 +52,10 @@ npm run dev
 
 1. Create a project at supabase.com.
 2. In the SQL editor, run `supabase/migrations/20261031000000_init.sql`, then `supabase/seed.sql`. Or, with the Supabase CLI: `supabase link` then `supabase db push`.
-3. **Auth → Providers → Email**: enable it. Udaan signs in with a 6-digit code, so in **Auth → Email Templates → Magic Link**, include `{{ .Token }}` in the template.
-4. **Auth → URL configuration**: set the Site URL to your deployed domain.
+3. **Auth → Sign In / Providers → Email**: keep it enabled. Udaan uses email and password. For the easiest sign-up, turn **Confirm email** off; with it on, new pilots must click a link in their email before signing in (the app handles both).
+4. **Auth → URL configuration**: set the Site URL to your deployed domain and add `https://YOUR-DOMAIN/**` to Redirect URLs (used by password-reset emails).
+
+Signing up creates the pilot's profile automatically: a trigger on `auth.users` (`supabase/migrations/20261031000200_signup_profiles.sql`) builds it from the name and username entered on the sign-up screen.
 5. Make yourself a moderator after your first sign-in:
    ```sql
    update public.profiles set role = 'moderator' where username = 'your_username';
