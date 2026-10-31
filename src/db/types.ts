@@ -1,3 +1,5 @@
+import type { PostLink, Socials } from '../lib/social';
+
 // Row shapes shared by the local IndexedDB store and Supabase (snake_case to
 // match the database). `updated_at` is always the server's clock.
 
@@ -27,6 +29,8 @@ export interface Profile extends Synced {
   builds: { name: string; specs: string }[];
   uin_registered: boolean;
   avatar_path?: string | null;
+  socials?: Socials;
+  featured_posts?: PostLink[];
   role?: 'pilot' | 'moderator';
 }
 
@@ -100,6 +104,8 @@ export interface Flight extends Synced {
   track: TrackPoint[];
   series: FlightSeries;
   media?: MediaRef[];
+  /** Instagram, YouTube, TikTok… posts about this flight. */
+  links?: PostLink[];
   notes?: string | null;
   is_public: boolean;
 }
@@ -155,11 +161,11 @@ export type WritableTable = Exclude<TableName, 'airports'>;
 /** Columns the client may send for each table. Server-owned columns
  * (updated_at, created_at, geom, role, status for spots…) are never sent. */
 export const CLIENT_COLUMNS: Record<WritableTable, string[]> = {
-  profiles: ['id', 'username', 'display_name', 'bio', 'home_base', 'styles', 'for_hire', 'services', 'builds', 'uin_registered', 'avatar_path'],
+  profiles: ['id', 'username', 'display_name', 'bio', 'home_base', 'styles', 'for_hire', 'services', 'builds', 'uin_registered', 'avatar_path', 'socials', 'featured_posts'],
   spots: ['id', 'created_by', 'name', 'type', 'lat', 'lng', 'best_time', 'notes', 'is_private', 'media'],
   events: ['id', 'host_id', 'title', 'kind', 'starts_at', 'ends_at', 'venue_name', 'spot_id', 'lat', 'lng', 'description', 'bring', 'capacity', 'fee', 'approval_note'],
   rsvps: ['id', 'event_id', 'user_id', 'status'],
-  flights: ['id', 'pilot_id', 'spot_id', 'title', 'flown_at', 'duration_s', 'max_alt_m', 'distance_m', 'source', 'track', 'series', 'media', 'notes', 'is_public'],
+  flights: ['id', 'pilot_id', 'spot_id', 'title', 'flown_at', 'duration_s', 'max_alt_m', 'distance_m', 'source', 'track', 'series', 'media', 'links', 'notes', 'is_public'],
   hire_requests: ['id', 'pilot_id', 'requester_id', 'shoot_type', 'location', 'shoot_date', 'budget', 'contact', 'message', 'status'],
   checkins: ['id', 'spot_id', 'user_id', 'checked_in_at', 'note'],
 };

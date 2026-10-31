@@ -1,14 +1,21 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { Avatar, BackButton, Empty, Media, TabBar, formatDuration } from '../components/ui';
+import { SocialEmbed } from '../components/SocialEmbed';
 import { db } from '../db/db';
+import { PLATFORM_SHORT, socialLinks } from '../lib/social';
 import type { Profile } from '../db/types';
 import { useAuth } from '../hooks/auth';
 import { STYLE_OPTIONS } from './Onboarding';
 
+type Tab = 'reels' | 'social' | 'builds' | 'spots' | 'logs';
+const TABS: Tab[] = ['reels', 'social', 'builds', 'spots', 'logs'];
+
 export function ProfileView({ profile, own }: { profile: Profile; own: boolean }) {
-  const [tab, setTab] = useState<'reels' | 'builds' | 'spots' | 'logs'>('reels');
+  const [params] = useSearchParams();
+  const initial = params.get('tab') as Tab | null;
+  const [tab, setTab] = useState<Tab>(initial && TABS.includes(initial) ? initial : 'reels');
   const spots = useLiveQuery(() => db.spots.where('created_by').equals(profile.id).toArray(), [profile.id]) ?? [];
   const flights = useLiveQuery(() => db.flights.where('pilot_id').equals(profile.id).reverse().sortBy('flown_at'), [profile.id]) ?? [];
   const checkinCount = useLiveQuery(() => db.checkins.where('user_id').equals(profile.id).count(), [profile.id]) ?? 0;
@@ -18,6 +25,11 @@ export function ProfileView({ profile, own }: { profile: Profile; own: boolean }
     ...spots.flatMap((s) => s.media.map((m) => ({ m, to: `/spots/${s.id}`, label: s.name }))),
   ];
   const shareUrl = `${location.origin}/pilots/${profile.username}`;
+  // Social tab: posts the pilot featured, then posts attached to their flights.
+  const socialPosts = [
+    ...(profile.featured_posts ?? []),
+    ...flights.filter((f) => f.is_public || own).flatMap((f) => f.links ?? []),
+  ].filter((l, i, all) => all.findIndex((x) => x.url === l.url) === i);
 
   return (
     <>
@@ -46,6 +58,16 @@ export function ProfileView({ profile, own }: { profile: Profile; own: boolean }
         {profile.uin_registered && <span className="tag">UIN registered</span>}
       </div>
       {profile.bio && <p style={{ color: 'var(--text-2)' }}>{profile.bio}</p>}
+      {socialLinks(profile.socials).length > 0 && (
+        <div className="chips">
+          {socialLinks(profile.socials).map((l) => (
+            <a key={l.href} className="social-chip" href={l.href} target="_blank" rel="noopener noreferrer">
+              <span className={`platform-badge platform-${l.platform}`} aria-hidden="true">{PLATFORM_SHORT[l.platform]}</span>
+              {l.label}
+            </a>
+          ))}
+        </div>
+      )}
       <div className="row">
         {own ? (
           <Link to="/me/edit" className="btn grow">Edit profile</Link>
@@ -59,8 +81,8 @@ export function ProfileView({ profile, own }: { profile: Profile; own: boolean }
         <div className="stat"><b>{checkinCount}</b><span>Check-ins</span></div>
       </div>
 
-      <div className="segmented" role="tablist" aria-label="Profile sections" style={{ gridTemplateColumns: 'repeat(4, minmax(0, 1fr))' }}>
-        {(['reels', 'builds', 'spots', 'logs'] as const).map((t) => (
+      <div className="segmented" role="tablist" aria-label="Profile sections" style={{ gridTemplateColumns: 'repeat(5, minmax(0, 1fr))', fontSize: 14 }}>
+        {TABS.map((t) => (
           <button key={t} type="button" role="tab" aria-selected={tab === t} onClick={() => setTab(t)}>{t[0].toUpperCase() + t.slice(1)}</button>
         ))}
       </div>
@@ -75,6 +97,18 @@ export function ProfileView({ profile, own }: { profile: Profile; own: boolean }
           ))}
         </div>
       ) : <Empty>No photos or clips yet.</Empty>)}
+
+      {tab === 'social' && (socialPosts.length ? (
+        <div className="stack">
+          {socialPosts.map((l) => <SocialEmbed key={l.url} link={l} />)}
+        </div>
+      ) : (
+        <Empty>
+          {own ? (
+            <>No posts yet. <Link className="link" to="/me/edit">Add your Instagram, YouTube or TikTok posts</Link>, or share one to Udaan.</>
+          ) : 'No social posts yet.'}
+        </Empty>
+      ))}
 
       {tab === 'builds' && (profile.builds.length ? profile.builds.map((b) => (
         <div key={b.name} className="card stack" style={{ gap: 2 }}><b>{b.name}</b><span className="small muted">{b.specs}</span></div>

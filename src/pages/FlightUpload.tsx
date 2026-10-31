@@ -3,9 +3,11 @@ import { useState, type FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Icon } from '../components/Icon';
 import { MediaGrid } from '../components/MediaGrid';
+import { PostLinksInput } from '../components/SocialEmbed';
 import { SignInPrompt, TopBar, formatDuration } from '../components/ui';
 import { db } from '../db/db';
 import type { Flight, MediaRef } from '../db/types';
+import { parsePostUrl, type PostLink } from '../lib/social';
 import { useAuth } from '../hooks/auth';
 import { FlightParseError, parseFlightFile, type ParsedFlight } from '../lib/flightParse';
 import { distanceM, formatDistance } from '../lib/geo';
@@ -41,6 +43,12 @@ export function FlightUpload() {
   const [spotId, setSpotId] = useState(params.get('spot') ?? '');
   const [isPublic, setPublic] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // A link shared into Udaan from Instagram etc. arrives as ?link=…
+  const [links, setLinks] = useState<PostLink[]>(() => {
+    const shared = params.get('link');
+    const post = shared ? parsePostUrl(shared) : null;
+    return post ? [{ url: post.url, platform: post.platform }] : [];
+  });
 
   if (!userId) return <main className="screen no-tabs"><TopBar title="Log a flight" back /><SignInPrompt what="log flights" /></main>;
 
@@ -94,7 +102,7 @@ export function FlightUpload() {
   async function save(e: FormEvent) {
     e.preventDefault();
     if (!userId) return;
-    if (!parsed && media.length === 0) return setError('Add a log file, a photo or a clip.');
+    if (!parsed && media.length === 0 && links.length === 0) return setError('Add a photo, a clip, a post link or a log file.');
     const flight: Flight = {
       id: newId(),
       pilot_id: userId,
@@ -108,6 +116,7 @@ export function FlightUpload() {
       track: parsed?.track ?? [],
       series: parsed?.series ?? { t: [] },
       media,
+      links,
       notes: notes.trim() || null,
       is_public: isPublic,
     };
@@ -115,12 +124,12 @@ export function FlightUpload() {
     navigate(`/logs/${flight.id}`, { replace: true });
   }
 
-  const ready = Boolean(parsed) || media.length > 0;
+  const ready = Boolean(parsed) || media.length > 0 || links.length > 0;
 
   return (
     <main className="screen no-tabs">
       <TopBar title="Log a flight" back />
-      <p className="small muted">Add photos or clips, a GPS log, or both. No GPS on your quad? Just add your clips.</p>
+      <p className="small muted">Add photos and clips, links to your Instagram, YouTube or TikTok posts, a GPS log, or any mix. No GPS on your quad? Just add your clips.</p>
       <form className="stack" style={{ gap: 16 }} onSubmit={save}>
         <section className="stack">
           <h2>Photos and clips</h2>
@@ -139,6 +148,12 @@ export function FlightUpload() {
           )}
           <span className="tiny faint">Photos are resized on your phone. Clips up to 50 MB each.</span>
           {mediaError && <p className="error-text" role="alert">{mediaError}</p>}
+        </section>
+
+        <section className="stack">
+          <h2>From Instagram, YouTube or TikTok</h2>
+          <PostLinksInput links={links} onChange={setLinks} max={10} />
+          <span className="tiny faint">In Instagram, tap Share → Copy link on your reel, then paste it here. On Android with Udaan installed, you can also share straight to Udaan.</span>
         </section>
 
         <section className="stack">

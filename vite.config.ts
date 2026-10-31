@@ -29,6 +29,14 @@ export default defineConfig({
           { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
           { src: '/icons/maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
+        // Lets pilots share a post from Instagram, YouTube or TikTok straight
+        // to Udaan (Android, once Udaan is installed).
+        share_target: {
+          action: '/share',
+          method: 'GET',
+          enctype: 'application/x-www-form-urlencoded',
+          params: { title: 'title', text: 'text', url: 'url' },
+        },
         shortcuts: [
           { name: 'Add a spot', url: '/spots/new' },
           { name: 'Upload a flight', url: '/logs/upload' },

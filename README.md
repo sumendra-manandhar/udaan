@@ -13,6 +13,7 @@ It works in the hills with no signal. Everything is saved on the phone first and
 | Moderation | New and moved spots stay private until a moderator approves; spots inside a ring can never go public (enforced in the database) | Review needs a connection |
 | Events | Race nights, group flights, workshops; RSVP with capacity | Browse, RSVP, host |
 | Flight logs | Photos and clips, a GPX / Blackbox Explorer CSV log, or both; logs parsed on the phone; replay with telemetry; GPX export | Yes |
+| Social media | Attach Instagram, YouTube, TikTok, Facebook or Vimeo posts to flights by link (embedded on tap); share a post from those apps straight to Udaan on Android; social account links and a Social tab with featured posts on profiles | Links offline; embeds need a connection |
 | Check-ins | "I'm here" at a spot, confirmed by the phone's GPS (location not stored); shows who's flying there now | Yes |
 | Pilot profiles | Builds, spots, reels, flights, "available for hire" with services | Yes |
 | Hire requests | Send and answer shoot requests | Yes |

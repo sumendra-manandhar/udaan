@@ -4,6 +4,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Icon } from '../components/Icon';
 import { MapView } from '../components/MapView';
 import { MediaGrid } from '../components/MediaGrid';
+import { SocialEmbed } from '../components/SocialEmbed';
 import { BackButton, Empty, Media, Sparkline, formatDuration } from '../components/ui';
 import { db } from '../db/db';
 import type { Flight } from '../db/types';
@@ -45,6 +46,7 @@ export function FlightReplay() {
   if (!flight) return <main className="screen"><BackButton /><Empty>Flight not found on this device.</Empty></main>;
   const hasTrack = flight.track.length >= 2;
   const media = flight.media ?? [];
+  const links = flight.links ?? [];
   const p = hasTrack ? flight.track[Math.min(cursor, flight.track.length - 1)] : null;
   const alt0 = flight.track[0]?.[2] ?? 0;
 
@@ -91,7 +93,7 @@ export function FlightReplay() {
         </>
       ) : (
         <>
-          <div className="cover" style={{ height: 300 }}>
+          <div className="cover" style={{ height: media[0] ? 300 : 120 }}>
             {media[0] && <Media media={media[0]} />}
             <div style={{ position: 'absolute', left: 16, top: 'calc(16px + env(safe-area-inset-top, 0px))', zIndex: 4 }}><BackButton glass to="/logs" /></div>
           </div>
@@ -106,6 +108,12 @@ export function FlightReplay() {
         </p>
       </div>
       {flight.notes && <p style={{ color: 'var(--text-2)', whiteSpace: 'pre-line' }}>{flight.notes}</p>}
+      {links.length > 0 && (
+        <section className="stack">
+          <h2>Posts</h2>
+          {links.map((l) => <SocialEmbed key={l.url} link={l} />)}
+        </section>
+      )}
       {media.length > 0 && (
         <section className="stack">
           <h2>Photos and clips</h2>

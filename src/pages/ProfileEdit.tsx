@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { Icon } from '../components/Icon';
+import { PostLinksInput } from '../components/SocialEmbed';
 import { Avatar, Chips, TopBar } from '../components/ui';
 import type { Profile } from '../db/types';
 import { useAuth } from '../hooks/auth';
 import { addMedia } from '../lib/media';
+import { normaliseSocials, type Socials } from '../lib/social';
 import { saveRow } from '../sync/mutate';
 import { HOME_BASES, STYLE_OPTIONS } from './Onboarding';
 
@@ -14,11 +16,14 @@ export function ProfileEdit() {
   const [p, setP] = useState<Profile | null>(null);
   const loaded = useRef(false);
   const [error, setError] = useState<string | null>(null);
+  const [socials, setSocials] = useState<Socials>({});
+  const [socialErrors, setSocialErrors] = useState<Partial<Record<keyof Socials, string>>>({});
 
   useEffect(() => {
     if (profile && !loaded.current) {
       loaded.current = true;
       setP(structuredClone(profile));
+      setSocials(profile.socials ?? {});
     }
   }, [profile]);
 
@@ -29,8 +34,12 @@ export function ProfileEdit() {
   async function submit(e: FormEvent) {
     e.preventDefault();
     if (!p) return;
+    const { value: cleanSocials, errors } = normaliseSocials(socials);
+    setSocialErrors(errors);
+    if (Object.keys(errors).length) return setError('Check your social media details.');
     await saveRow('profiles', {
       ...p,
+      socials: cleanSocials,
       display_name: p.display_name.trim(),
       services: p.services.filter((s) => s.title.trim()),
       builds: p.builds.filter((b) => b.name.trim()),
@@ -68,6 +77,39 @@ export function ProfileEdit() {
         </div>
         <div className="field"><span className="label">Flying styles</span><Chips label="Flying styles" options={STYLE_OPTIONS} value={p.styles} multiple onChange={(v) => update({ styles: v as string[] })} /></div>
         <label className="toggle-row"><span>My drone has a UIN from CAAN</span><input type="checkbox" checked={p.uin_registered} onChange={(e) => update({ uin_registered: e.target.checked })} /></label>
+
+        <section className="stack">
+          <h2>Social media</h2>
+          <p className="small muted">Shown on your profile so pilots and clients can find your work.</p>
+          {([
+            ['instagram', 'Instagram username', 'fpv_yourname'],
+            ['youtube', 'YouTube channel', '@YourChannel or channel link'],
+            ['tiktok', 'TikTok username', 'yourname'],
+            ['facebook', 'Facebook page', 'https://facebook.com/yourpage'],
+            ['website', 'Website or portfolio', 'yourname.com'],
+          ] as const).map(([key, label, placeholder]) => (
+            <div className="field" key={key}>
+              <label htmlFor={`social-${key}`}>{label}</label>
+              <input
+                id={`social-${key}`}
+                className="input"
+                autoCapitalize="none"
+                spellCheck={false}
+                placeholder={placeholder}
+                value={socials[key] ?? ''}
+                onChange={(e) => setSocials({ ...socials, [key]: e.target.value })}
+                aria-invalid={Boolean(socialErrors[key])}
+              />
+              {socialErrors[key] && <span className="error-text">{socialErrors[key]}</span>}
+            </div>
+          ))}
+        </section>
+
+        <section className="stack">
+          <h2>Featured posts</h2>
+          <p className="small muted">Pick up to 12 Instagram, YouTube or TikTok posts to show in the Social tab of your profile.</p>
+          <PostLinksInput links={p.featured_posts ?? []} onChange={(featured_posts) => update({ featured_posts })} max={12} label="Add a featured post" />
+        </section>
 
         <section className="stack">
           <h2>Quad builds</h2>
